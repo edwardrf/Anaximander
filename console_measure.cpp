@@ -5,7 +5,6 @@
 #include "opencv2/imgproc/imgproc.hpp"
 #include "opencv2/highgui/highgui.hpp"
 #include "laser.h"
-#include "capture.h"
 #include "server.h"
 #include "base64.h"
 #include "sha1.h"
@@ -55,7 +54,7 @@ void processHTTP(int sock, string request);
  */
 int main( int argc, char** argv )
 {
-  Mat src(480, 640, CV_8UC3), undistorted;
+  Mat src, undistorted;
   VideoCapture cap(video_device);
   if(!cap.isOpened()){
     cout << "Failed to open video device " << video_device << ". Please check the camera is properly attached" << endl;
@@ -69,14 +68,13 @@ int main( int argc, char** argv )
   for(;;){
     frameCounter++;
 
-    cap >> undistorted;
-    if(undistorted.empty()) continue;
+    cap >> src;
+    if(src.empty()) continue;
 
     undistort(src, undistorted, cameraMatrix, distCoeffs);
 
     //imwrite("output.png", undistorted);
     Mat crop(undistorted, Rect(0, top_start, total_width, total_height));
-
     /// Convert the image to Gray
     cvtColor( crop, src_gray, COLOR_RGB2GRAY );
 
