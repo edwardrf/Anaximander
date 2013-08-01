@@ -1,6 +1,6 @@
-CFLAGS=`pkg-config --cflags --libs opencv` -g
+CFLAGS=`pkg-config --cflags --libs opencv` -g -Wall
 
-all: test01 test02 test03 test04 test05 measure
+all: test01 test02 test03 test04 test05 measure console_measure
 
 test01: test01.cpp
 	g++ -otest01 test01.cpp $(CFLAGS)
@@ -12,7 +12,15 @@ test04: test04.cpp
 	g++ -otest04 test04.cpp $(CFLAGS)
 test05: test05.cpp
 	g++ -otest05 test05.cpp $(CFLAGS)
-measure: measure.cpp
-	g++ -omeasure measure.cpp $(CFLAGS) -lgsl -lgslcblas
+measure: measure.o laser.o
+	g++ -omeasure measure.o laser.o $(CFLAGS) -lgsl -lgslcblas
+measure.o: measure.cpp laser.h
+	g++ -c -g -omeasure.o measure.cpp
+laser.o: laser.cpp laser.h
+	g++ -c -g -olaser.o laser.cpp -lgsl -lgslcblas
+console_measure: console_measure.o laser.o
+	g++ -oconsole_measure console_measure.o laser.o $(CFLAGS) -lgsl -lgslcblas
+measure.o: console_measure.cpp laser.h
+	g++ -c -g -oconsole_measure.o console_measure.cpp
 clean:
-	rm test?? measure
+	rm test?? measure *.o
