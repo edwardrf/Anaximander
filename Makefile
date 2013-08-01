@@ -20,7 +20,7 @@ laser.o: laser.cpp laser.h
 	g++ -c -g -olaser.o laser.cpp -lgsl -lgslcblas
 console_measure: console_measure.o laser.o
 	g++ -oconsole_measure console_measure.o laser.o $(CFLAGS) -lgsl -lgslcblas
-measure.o: console_measure.cpp laser.h
+console_measure.o: console_measure.cpp laser.h
 	g++ -c -g -oconsole_measure.o console_measure.cpp
 clean:
 	rm test?? measure *.o
