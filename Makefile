@@ -1,6 +1,6 @@
 CC=g++
 CFLAGS=`pkg-config --cflags opencv` -g -Wall -I/usr/include/gsl/
-LDFLAGS=`pkg-config  --libs opencv` -lgsl -lgslcblas -lv4l2
+LDFLAGS=-lgsl -lgslcblas -lv4l2 `pkg-config --libs opencv`
 SOURCES=$(wildcard *.cpp)
 OBJDIR=obj
 OBJECTS=$(addprefix $(OBJDIR)/, $(SOURCES:.cpp=.o))
@@ -10,6 +10,6 @@ all: $(EXECUTABLE)
 $(EXECUTABLE): $(OBJECTS)
 	$(CC) $(OBJECTS) -o $@ $(LDFLAGS)
 $(OBJDIR)/%.o: %.cpp
-	$(CC) -c $(CFLAGS) $< -o $@
+	$(CC) -c $< -o $@ $(CFLAGS)
 clean:
 	rm $(EXECUTABLE) $(OBJECTS)

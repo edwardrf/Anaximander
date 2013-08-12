@@ -152,7 +152,7 @@ static int frameRead(unsigned char* targetBuffer, int type)
 /**
 	mainloop: read frames and process them
 */
-static void captureOneFrame(unsigned char* targetBuffer, int type)
+void captureOneFrame(unsigned char* targetBuffer, int type)
 {
 	unsigned int count;
 	unsigned int numberOfTimeouts;

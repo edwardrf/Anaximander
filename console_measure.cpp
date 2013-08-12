@@ -20,7 +20,7 @@ int const total_width = 640;
 int const num_of_zones = 200;
 
 double laser[num_of_zones];
-double cameraMatrixData[3][3]={314.51901676957806, 0.0, 319.5, 0.0, 314.51901676957806, 239.5, 0.0, 0.0, 1.0};
+double cameraMatrixData[3][3]={{314.51901676957806, 0.0, 319.5}, {0.0, 314.51901676957806, 239.5}, {0.0, 0.0, 1.0}};
 double distCoeffsData[5]={0.32667523460674525, -0.53290547319982662, 0.0, 0.0, 0.21020317981028694};
 Mat cameraMatrix(3,3, CV_64FC1, cameraMatrixData);// Scalar(314.51901676957806, 0.0, 319.5, 0.0, 314.51901676957806, 239.5, 0.0, 0.0, 1.0);
 Mat distCoeffs(5,1,CV_64FC1, distCoeffsData);
@@ -34,7 +34,6 @@ const char* trackbar_value = "Value";
 
 /// Function headers
 void Threshold_Demo( int, void* );
-void onMouse( int event, int x, int y, int, void*);
 
 /**
  * @function main
@@ -42,15 +41,10 @@ void onMouse( int event, int x, int y, int, void*);
 int main( int argc, char** argv )
 {
 
-  rdisplay.create(200,200,CV_8UC1);
-
-  VideoCapture cap(0); // open the default camera
-  if(!cap.isOpened())  // check if we succeeded
-    return -1;
-
-  Mat src, undistorted;
-  rdisplay.setTo(Scalar(30));
-  cap >> src; // get a new frame from camera
+  initCapture();
+  Mat src(480, 640, CV_8UC1), undistorted;
+  captureOneFrame(src.ptr(), CAPTURE_TYPE_GRAY); // get a new frame from camera
+  finishCapture();
   // src = imread( argv[1], 1 );
   undistorted = src.clone();
   undistort(src, undistorted, cameraMatrix, distCoeffs);
@@ -58,9 +52,10 @@ int main( int argc, char** argv )
   Mat crop(undistorted, Rect(0, top_start, total_width, total_height));
 
   /// Convert the image to Gray
-  cvtColor( crop, src_gray, CV_RGB2GRAY );
+  //cvtColor( crop, src_gray, CV_RGB2GRAY );
 
-  findLaser(src_gray, num_of_zones, laser);
+  findLaser(crop, num_of_zones, laser);
+  imwrite("test.png", crop);
 
   Threshold_Demo(0,0);
 }
