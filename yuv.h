@@ -31,6 +31,6 @@
 void YUV420toYUV444(int width, int height, unsigned char* src, unsigned char* dst);
 void YUYVtoYUV444(int width, int height, unsigned char* src, unsigned char* dst);
 void YUYVtoGRAY(int width, int height, unsigned char* src, unsigned char* dst);
-void YUYVtoRGB(int width, int height, unsigned char* src, unsigned char* dst);
+void YUYVtoBGR(int width, int height, unsigned char* src, unsigned char* dst);
 
 #endif

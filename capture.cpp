@@ -41,7 +41,6 @@
 #include <jpeglib.h>
 #include <libv4l2.h>
 
-#include "config.h"
 #include "yuv.h"
 #include "capture.h"
 
@@ -108,8 +107,8 @@ static void imageProcess(const void* p, unsigned char* dst, int type)
 		case CAPTURE_TYPE_GRAY:
 			YUYVtoGRAY(width, height, src, dst);
 			break;
-		case CAPTURE_TYPE_RGB:
-			YUYVtoRGB(width, height, src, dst);
+		case CAPTURE_TYPE_BGR:
+			YUYVtoBGR(width, height, src, dst);
 	}
 
 }
