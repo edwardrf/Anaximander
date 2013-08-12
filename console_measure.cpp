@@ -65,7 +65,7 @@ int main( int argc, char** argv )
   Mat crop(undistorted, Rect(0, top_start, total_width, total_height));
 
   /// Convert the image to Gray
-  cvtColor( crop, src_gray, CV_RGB2GRAY );
+  cvtColor( crop, src_gray, COLOR_RGB2GRAY );
 
   findLaser(crop, num_of_zones, laser);
 
