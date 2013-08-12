@@ -53,9 +53,33 @@ void findLaser(Mat I, int num_of_zones, double* laser){
     int last_sum = 0;
     int last_cnt = 0;
     int xcnt = 0;
+    int status = 0;
+    int start_val = 0;
+
+    for(int y = 1; y < cnt[n]; y++){
+      if(status == 0){
+        int g = readings[n][y] - readings[n][y-1];
+        if(g > 10){
+          status = 1;
+          start_val = readings[n][y - 1];
+          xcnt ++;
+        }
+      }else if(status == 1) {
+        if(readings[n][y] > start_val) {
+          local_sum += readings[n][y] * y;
+          local_cnt += readings[n][y];
+        }else {
+          last_sum = local_sum;
+          last_cnt = local_cnt;
+          local_sum = 0;
+          local_cnt = 0;
+          status = 0;
+        }
+      }
+    }
 
     // Continue here, new method: try to find local max
-
+/*
     for(int y = 0; y < cnt[n]; y++){
       if(readings[n][y] > t){
         local_sum += readings[n][y] * y;
@@ -70,7 +94,7 @@ void findLaser(Mat I, int num_of_zones, double* laser){
         local_cnt = 0;
       }
     }
-
+*/
     if(last_cnt > 0){
       laser[n] = (double)last_sum / last_cnt;
     }else {

@@ -2,6 +2,7 @@
 #include "opencv2/highgui/highgui.hpp"
 #include <iostream>
 #include "laser.h"
+#include "capture.h"
 
 using namespace cv;
 using namespace std;
