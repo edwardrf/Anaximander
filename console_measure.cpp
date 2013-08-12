@@ -3,6 +3,7 @@
 #include <iostream>
 #include "laser.h"
 #include "capture.h"
+#include "server.h"
 
 using namespace cv;
 using namespace std;
@@ -35,6 +36,17 @@ const char* trackbar_value = "Value";
 /// Function headers
 void Threshold_Demo( int, void* );
 
+void serveValue(int sock){
+    int n;
+    char buffer[256];
+    bzero(buffer,256);
+    n = read(sock,buffer,255);
+    if (n < 0) puts("ERROR reading from socket");
+    printf("Here is the message: %s\n",buffer);
+    n = write(sock,"I got your message",18);
+    if (n < 0) puts("ERROR writing to socket");
+}
+
 /**
  * @function main
  */
@@ -58,6 +70,9 @@ int main( int argc, char** argv )
   imwrite("test.png", crop);
 
   Threshold_Demo(0,0);
+  startServer(3090, serveValue);
+  puts("hi");
+  wait();
 }
 
 /**
@@ -71,4 +86,3 @@ void Threshold_Demo( int, void*)
   }
 
 }
-
