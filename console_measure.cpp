@@ -54,20 +54,20 @@ int main( int argc, char** argv )
 {
 
   initCapture();
-  Mat src(480, 640, CV_8UC1), undistorted;
-  captureOneFrame(src.ptr(), CAPTURE_TYPE_GRAY); // get a new frame from camera
+  Mat src(480, 640, CV_8UC3), undistorted;
+  captureOneFrame(src.ptr(), CAPTURE_TYPE_BGR); // get a new frame from camera
   finishCapture();
   // src = imread( argv[1], 1 );
-  undistorted = src.clone();
+  //undistorted = src.clone();
   undistort(src, undistorted, cameraMatrix, distCoeffs);
 
+  imwrite("output.png", undistorted);
   Mat crop(undistorted, Rect(0, top_start, total_width, total_height));
 
   /// Convert the image to Gray
-  //cvtColor( crop, src_gray, CV_RGB2GRAY );
+  cvtColor( crop, src_gray, CV_RGB2GRAY );
 
   findLaser(crop, num_of_zones, laser);
-  imwrite("test.png", crop);
 
   Threshold_Demo(0,0);
   startServer(3090, serveValue);

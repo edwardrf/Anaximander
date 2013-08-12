@@ -1,5 +1,5 @@
 #define CAPTURE_TYPE_GRAY 0
-#define CAPTURE_TYPE_RGB 1
+#define CAPTURE_TYPE_BGR 1
 
 void initCapture(void);
 void finishCapture(void);

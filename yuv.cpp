@@ -76,13 +76,13 @@ void YUYVtoGRAY(int width, int height, unsigned char* src, unsigned char* dst) {
 	int i;
 	unsigned char *tmp = dst;
 
-	for (i = 0; i < width * height / 2; ++i) {
+	for (i = 0; i < width * height; ++i) {
 		*tmp++ = *src;
 		src += 2;
 	}
 }
 
-void YUYVtoRGB(int width, int height, unsigned char* src, unsigned char* dst) {
+void YUYVtoBGR(int width, int height, unsigned char* src, unsigned char* dst) {
 	int i;
 	unsigned char *py1, *pu, *py2, *pv;
 	unsigned char *tmp = dst;
