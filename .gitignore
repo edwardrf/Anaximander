@@ -4,3 +4,5 @@ test??
 measure
 console_measure
 obj
+*.png
+*.jpg
