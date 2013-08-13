@@ -107,12 +107,20 @@ void findLaser(Mat I, int num_of_zones, double* laser){
   }
 }
 
-Point mapToRange(double x, double y, Mat I){
+
+Point mapToRange(double x, double y, int height){
   x = x - sensor_center;
-  y = I.rows - y;
+  y = height - y;
 
   int rx = (int)(x / (15590.7/ y - 48.0679));
   int ry = (int)(4.52556087963698 * y/ (317.3293561387 - y));
 
   return Point(rx, ry);
+}
+
+Point laserToRange(int n, double y, int num_of_zones, int height){
+  double sx = -158.61 + 0.61682 * y;
+  double dx = (1.2243 * (476 - y) + 301) / num_of_zones;
+  double x = sx + dx * (n + 0.5);
+  return mapToRange(x, y, height);
 }

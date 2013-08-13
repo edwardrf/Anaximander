@@ -1,1 +1,2 @@
-void startServer(int portno, void task(int));
+#include <boost/thread.hpp>
+boost::thread* startServer(int portno, void task(int));
