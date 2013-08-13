@@ -108,8 +108,7 @@ int main( int argc, char** argv )
     time_t now = time(NULL);
     if(now - start >= 1) {
       start = now;
-      cout << "\r" << frameCounter << "fps   ";
-      cout.flush();
+      cout << "\r" << frameCounter << "fps   " << flush;
       frameCounter = 0;
     }
   }

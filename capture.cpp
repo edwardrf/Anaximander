@@ -40,7 +40,7 @@
 #include <linux/videodev2.h>
 #include <jpeglib.h>
 #include <libv4l2.h>
-
+#include <iostream>
 #include "yuv.h"
 #include "capture.h"
 
@@ -52,6 +52,7 @@
 
 #define VIDIOC_REQBUFS_COUNT 4
 
+using namespace std;
 
 struct buffer {
         void *                  start;
@@ -120,7 +121,6 @@ static int frameRead(unsigned char* targetBuffer, int type)
 {
 	struct v4l2_buffer buf;
 	CLEAR(buf);
-
 	buf.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
 	buf.memory = V4L2_MEMORY_MMAP;
 
@@ -141,10 +141,8 @@ static int frameRead(unsigned char* targetBuffer, int type)
 	assert(buf.index < n_buffers);
 
 	imageProcess(buffers[buf.index].start, targetBuffer, type);
-
 	if (-1 == xioctl(fd, VIDIOC_QBUF, &buf))
 		errno_exit("VIDIOC_QBUF");
-
 	return 1;
 }
 
@@ -153,48 +151,42 @@ static int frameRead(unsigned char* targetBuffer, int type)
 */
 void captureOneFrame(unsigned char* targetBuffer, int type)
 {
-	unsigned int count;
+ 	unsigned int count;
 	unsigned int numberOfTimeouts;
 
 	numberOfTimeouts = 0;
-	count = 3;
 
-	while (count-- > 0) {
-		for (;;) {
-			fd_set fds;
-			struct timeval tv;
-			int r;
+	for (;;) {
+		fd_set fds;
+		struct timeval tv;
+		int r;
 
-			FD_ZERO(&fds);
-			FD_SET(fd, &fds);
+		FD_ZERO(&fds);
+		FD_SET(fd, &fds);
 
-			/* Timeout. */
-			tv.tv_sec = 1;
-			tv.tv_usec = 0;
+		/* Timeout. */
+		tv.tv_sec = 1;
+		tv.tv_usec = 0;
+		r = select(fd + 1, &fds, NULL, NULL, &tv);
+		if (-1 == r) {
+			if (EINTR == errno)
+				continue;
 
-			r = select(fd + 1, &fds, NULL, NULL, &tv);
-
-			if (-1 == r) {
-				if (EINTR == errno)
-					continue;
-
-				errno_exit("select");
-			}
-
-			if (0 == r) {
-				if (numberOfTimeouts <= 0) {
-					count++;
-				} else {
-					fprintf(stderr, "select timeout\n");
-					exit(EXIT_FAILURE);
-				}
-			}
-
-			if (frameRead(targetBuffer, type))
-				break;
-
-			/* EAGAIN - continue select loop. */
+			errno_exit("select");
 		}
+
+		if (0 == r) {
+			if (numberOfTimeouts <= 0) {
+				count++;
+			} else {
+				fprintf(stderr, "select timeout\n");
+				exit(EXIT_FAILURE);
+			}
+		}
+		if (frameRead(targetBuffer, type))
+			break;
+
+		/* EAGAIN - continue select loop. */
 	}
 }
 
