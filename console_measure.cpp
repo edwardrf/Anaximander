@@ -79,21 +79,21 @@ int main( int argc, char** argv )
  */
 void processHTTP(int sock, string request){
   ostringstream response;
-  response << "HTTP/1.1 200 OK\r\nContent-Type: text/html; charset=UTF-8\r\n\r\n";
+  response << "HTTP/1.1 200 OK\r\nContent-Type: text/html; charset=UTF-8\r\nAccess-Control-Allow-Origin: http://localhost\r\n\r\n";
   if(request.find("X-Requested-With") != string::npos){
     // AJAX request
   }else {
     // Normal http
   }
 
-  // response << "[";
+  response << "[";
   for(int n = 0; n < num_of_zones; n++){
     Point p = laserToRange(n, laser[n], num_of_zones, total_height);
-    // response << "{x:" << p.x << ", " << "y:" << p.y << "}";
-    response << p.x << ", " << p.y;
+    response << "[" << p.x << ", " << p.y << "],";
+    //response << p.x << ", " << p.y;
     if(n + 1 < num_of_zones) response << ",\n";
   }
-  // response << "]";
+  response << "]";
   string rstr = response.str();
   write(sock, rstr.c_str(), rstr.length());
 }
