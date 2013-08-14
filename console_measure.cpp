@@ -35,6 +35,48 @@ Mat src, src_gray, dst;
 
 char buffer[BUFFER_SIZE];
 
+void processRange(int sock, string request);
+void processRequest(int sock);
+void processHTTP(int sock, string request);
+
+/**
+ * @function main
+ */
+int main( int argc, char** argv )
+{
+
+  initCapture();
+  Mat src(480, 640, CV_8UC3), undistorted;
+  boost::thread* server = startServer(3090, processRequest);
+  int frameCounter = 0;
+  time_t start = time(NULL);
+  for(;;){
+    captureOneFrame(src.ptr(), CAPTURE_TYPE_BGR); // get a new frame from camera
+    frameCounter++;
+    undistort(src, undistorted, cameraMatrix, distCoeffs);
+
+    //imwrite("output.png", undistorted);
+    Mat crop(undistorted, Rect(0, top_start, total_width, total_height));
+
+    /// Convert the image to Gray
+    cvtColor( crop, src_gray, COLOR_RGB2GRAY );
+
+    findLaser(crop, num_of_zones, laser);
+    time_t now = time(NULL);
+    if(now - start >= 1) {
+      start = now;
+      cout << "\r" << frameCounter << "fps   " << flush;
+      frameCounter = 0;
+    }
+  }
+
+  server->join();
+  finishCapture();
+}
+
+/**
+ * Process the request as a HTTP request
+ */
 void processHTTP(int sock, string request){
   ostringstream response;
   response << "HTTP/1.1 200 OK\r\nContent-Type: text/html; charset=UTF-8\r\n\r\n";
@@ -60,7 +102,10 @@ void processRange(int sock, string request){
   cout << "RANGE" << request << endl;
 }
 
-void serveValue(int sock){
+/**
+ * Process request from conecting socket
+ */
+void processRequest(int sock){
   string request;
 
   do{
@@ -79,40 +124,4 @@ void serveValue(int sock){
     processRange(sock, request);
   }
   close(sock);
-}
-
-
-/**
- * @function main
- */
-int main( int argc, char** argv )
-{
-
-  initCapture();
-  Mat src(480, 640, CV_8UC3), undistorted;
-  boost::thread* server = startServer(3090, serveValue);
-  int frameCounter = 0;
-  time_t start = time(NULL);
-  for(;;){
-    captureOneFrame(src.ptr(), CAPTURE_TYPE_BGR); // get a new frame from camera
-    frameCounter++;
-    undistort(src, undistorted, cameraMatrix, distCoeffs);
-
-    //imwrite("output.png", undistorted);
-    Mat crop(undistorted, Rect(0, top_start, total_width, total_height));
-
-    /// Convert the image to Gray
-    cvtColor( crop, src_gray, COLOR_RGB2GRAY );
-
-    findLaser(crop, num_of_zones, laser);
-    time_t now = time(NULL);
-    if(now - start >= 1) {
-      start = now;
-      cout << "\r" << frameCounter << "fps   " << flush;
-      frameCounter = 0;
-    }
-  }
-
-  server->join();
-  finishCapture();
 }
