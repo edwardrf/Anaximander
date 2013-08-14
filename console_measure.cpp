@@ -89,7 +89,7 @@ void processHTTP(int sock, string request){
   response << "[";
   for(int n = 0; n < num_of_zones; n++){
     Point p = laserToRange(n, laser[n], num_of_zones, total_height);
-    response << "[" << p.x << ", " << p.y << "],";
+    response << "[" << p.x << ", " << p.y << "]";
     //response << p.x << ", " << p.y;
     if(n + 1 < num_of_zones) response << ",\n";
   }
