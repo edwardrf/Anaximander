@@ -35,6 +35,8 @@ Mat src, src_gray, dst;
 
 char buffer[BUFFER_SIZE];
 
+const char* window_name = "Laser Range Finder";
+
 void processRange(int sock, string request);
 void processRequest(int sock);
 void processHTTP(int sock, string request);
@@ -44,7 +46,6 @@ void processHTTP(int sock, string request);
  */
 int main( int argc, char** argv )
 {
-
   initCapture();
   Mat src(480, 640, CV_8UC3), undistorted;
   boost::thread* server = startServer(3090, processRequest);
@@ -61,7 +62,7 @@ int main( int argc, char** argv )
     /// Convert the image to Gray
     cvtColor( crop, src_gray, COLOR_RGB2GRAY );
 
-    findLaser(crop, num_of_zones, laser);
+    findLaser(src_gray, num_of_zones, laser);
     time_t now = time(NULL);
     if(now - start >= 1) {
       start = now;
@@ -89,10 +90,11 @@ void processHTTP(int sock, string request){
   response << "[";
   int c = 0;
   for(int n = 0; n < num_of_zones; n++){
-    if(laser[n] < 0) continue;
+    //if(laser[n] < 0) continue;
     if(c > 0) response << ",\n";
     Point p = laserToRange(n, laser[n], num_of_zones, total_height);
     response << "[" << p.x << ", " << p.y << "]";
+    //response << "[" << n << ", " << laser[n] << "]";
     c++;
     //response << p.x << ", " << p.y;
   }
@@ -117,7 +119,7 @@ void processRequest(int sock){
     request += buffer;
   }while (request.find("\r\n\r\n") == string::npos);
 
-  cout << request << endl;
+  //cout << request << endl;
 
   if(request.find("GET ") == 0){
     // Process HTTP request

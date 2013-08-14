@@ -7,10 +7,13 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <string.h>
+#include <signal.h>
 #include <sys/types.h> 
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <boost/thread.hpp>
+
+struct sigaction sigact;
 
 void error(const char *msg){
     perror(msg);
@@ -18,11 +21,15 @@ void error(const char *msg){
 }
 
 int runServer(int portno, void task(int)){
+
     int sockfd, newsockfd;
     socklen_t clilen;
     struct sockaddr_in serv_addr, cli_addr;
 
     sockfd = socket(AF_INET, SOCK_STREAM, 0);
+    int so_reuseaddr = 1;
+    setsockopt(sockfd,SOL_SOCKET,SO_REUSEADDR, &so_reuseaddr, sizeof so_reuseaddr);
+
     if (sockfd < 0) error("ERROR opening socket");
     bzero((char *) &serv_addr, sizeof(serv_addr));
 

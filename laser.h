@@ -12,5 +12,5 @@ using namespace std;
 int const sensor_center = 309;
 
 void findLaser(Mat I, int, double*);
-Point mapToRange(double x, double y, int height);
+Point mapToRange(double x, double y);
 Point laserToRange(int n, double y, int num_of_zones, int height);
