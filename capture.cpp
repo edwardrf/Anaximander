@@ -66,7 +66,7 @@ static unsigned int     n_buffers       = 0;
 // global settings
 static unsigned int width = 640;
 static unsigned int height = 480;
-const static char* deviceName = "/dev/video1";
+const static char* deviceName = "/dev/video0";
 
 /**
 	Print error message and terminate programm with EXIT_FAILURE return code.
