@@ -47,8 +47,8 @@ int main( int argc, char** argv )
   if(!cap.isOpened())  // check if we succeeded
     return -1;
   /// Create a window to display results
-  namedWindow( window_name, CV_WINDOW_AUTOSIZE );
-  namedWindow( range_window_name, CV_WINDOW_AUTOSIZE );
+  namedWindow( window_name, WINDOW_AUTOSIZE );
+  namedWindow( range_window_name, WINDOW_AUTOSIZE );
 
   /// Create Trackbar to choose type of Threshold
   createTrackbar( trackbar_type,
@@ -72,7 +72,7 @@ int main( int argc, char** argv )
     Mat crop(undistorted, Rect(0, top_start, total_width, total_height));
 
     /// Convert the image to Gray
-    cvtColor( crop, src_gray, CV_RGB2GRAY );
+    cvtColor( crop, src_gray, COLOR_RGB2GRAY );
 
     findLaser(src_gray, num_of_zones, laser);
 
