@@ -1,5 +1,5 @@
 #include "laser.h"
-/*
+
 void findLaser(Mat I, int num_of_zones, double* laser){
   int total_height = I.rows;
   int total_width = I.cols;
@@ -94,7 +94,7 @@ void findLaser(Mat I, int num_of_zones, double* laser){
         local_cnt = 0;
       }
     }
-* /
+*/
     if(last_cnt > 0){
       laser[n] = (double)last_sum / last_cnt;
     }else {
@@ -106,8 +106,8 @@ void findLaser(Mat I, int num_of_zones, double* laser){
 
   }
 }
-*/
 
+/*
 void findLaser(Mat I, int num_of_zones, double* laser){
   int total_height = I.rows;
   int total_width = I.cols;
@@ -208,7 +208,7 @@ void findLaser(Mat I, int num_of_zones, double* laser){
     }
   }
 }
-
+*/
 Point mapToRange(double x, double y){
   x = x - sensor_center;
 

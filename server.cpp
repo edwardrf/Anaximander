@@ -21,7 +21,7 @@ void error(const char *msg){
 }
 
 int runServer(int portno, void task(int)){
-
+    signal(SIGPIPE, SIG_IGN);
     int sockfd, newsockfd;
     socklen_t clilen;
     struct sockaddr_in serv_addr, cli_addr;

@@ -12,6 +12,7 @@
 
 using namespace cv;
 using namespace std;
+using namespace boost;
 
 /// Global variables
 
@@ -34,8 +35,9 @@ Mat distCoeffs(5,1,CV_64FC1, distCoeffsData);
 Mat src, src_gray, dst;
 
 char buffer[BUFFER_SIZE];
-
-const char* window_name = "Laser Range Finder";
+condition_variable newDataCond;
+mutex mut;
+bool newDataReady;
 
 void processRange(int sock, string request);
 void processRequest(int sock);
@@ -48,7 +50,7 @@ int main( int argc, char** argv )
 {
   initCapture();
   Mat src(480, 640, CV_8UC3), undistorted;
-  boost::thread* server = startServer(3090, processRequest);
+  thread* server = startServer(3090, processRequest);
   int frameCounter = 0;
   time_t start = time(NULL);
   for(;;){
@@ -63,6 +65,12 @@ int main( int argc, char** argv )
     cvtColor( crop, src_gray, COLOR_RGB2GRAY );
 
     findLaser(src_gray, num_of_zones, laser);
+    {
+        lock_guard<mutex> lock(mut);
+        newDataReady=true;
+    }
+    newDataCond.notify_one();
+
     time_t now = time(NULL);
     if(now - start >= 1) {
       start = now;
@@ -70,7 +78,7 @@ int main( int argc, char** argv )
       frameCounter = 0;
     }
   }
-
+  cout << "Done." << endl << flush;
   server->join();
   finishCapture();
 }
@@ -90,13 +98,11 @@ void processHTTP(int sock, string request){
   response << "[";
   int c = 0;
   for(int n = 0; n < num_of_zones; n++){
-    //if(laser[n] < 0) continue;
+    if(laser[n] < 0) continue;
     if(c > 0) response << ",\n";
     Point p = laserToRange(n, laser[n], num_of_zones, total_height);
     response << "[" << p.x << ", " << p.y << "]";
-    //response << "[" << n << ", " << laser[n] << "]";
     c++;
-    //response << p.x << ", " << p.y;
   }
   response << "]";
   string rstr = response.str();
@@ -104,7 +110,25 @@ void processHTTP(int sock, string request){
 }
 
 void processRange(int sock, string request){
-  cout << "RANGE" << request << endl;
+  unique_lock<mutex> lock(mut);
+  int buf[2];
+  while(true){
+    while(!newDataReady){
+      newDataCond.wait(lock);
+    }
+    newDataReady = false;
+    for(int n = 0; n < num_of_zones; n++){
+      if(laser[n] < 0) continue;
+      Point p = laserToRange(n, laser[n], num_of_zones, total_height);
+      buf[0] = p.x;
+      buf[1] = p.y;
+      int r = write(sock, buf, 2);
+      if(r == -1) {
+        cout << "Write to client failed" << endl << flush;
+        return;
+      }
+    }
+  }
 }
 
 /**
