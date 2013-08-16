@@ -60,7 +60,7 @@ void findLaser(Mat I, int num_of_zones, double* laser){
     for(int y = 1; y < cnt[n]; y++){
       int g = readings[n][y] - readings[n][y - 1];
       if(status == 0){
-        if(g > 20){
+        if(g > 30){
           status = 1;
           start_val = readings[n][y];
           xcnt ++;
