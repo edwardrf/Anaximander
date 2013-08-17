@@ -6,11 +6,11 @@ void findLaser(Mat I, int num_of_zones, double* laser){
 
   double total[num_of_zones],
     maxv[num_of_zones],
-    cnt[num_of_zones],
     maxv_sorted[num_of_zones];
+  int cnt[num_of_zones];
 
   int readings[num_of_zones][total_height];
-  int readings_sorted[num_of_zones][total_height];
+  //int readings_sorted[num_of_zones][total_height];
 
   // Initialization
   for(int n = 0; n < num_of_zones; n++){
@@ -35,7 +35,7 @@ void findLaser(Mat I, int num_of_zones, double* laser){
         maxv_sorted[n] = value;
       }
       readings[n][total_height - y] = value;
-      readings_sorted[n][total_height - y] = value;
+      //readings_sorted[n][total_height - y] = value;
     }
   }
 
@@ -44,9 +44,6 @@ void findLaser(Mat I, int num_of_zones, double* laser){
 
   // Calculation
   for(int n = 0; n < num_of_zones; n++){
-
-    int t = maxv[n] - 5;
-    if (t < 0) t = 0;
 
     int local_sum = 0;
     int local_cnt = 0;
@@ -58,25 +55,40 @@ void findLaser(Mat I, int num_of_zones, double* laser){
     int flat = 0;
 
     for(int y = 1; y < cnt[n]; y++){
-      int g = readings[n][y] - readings[n][y - 1];
-      if(status == 0){
-        if(g > 30){
-          status = 1;
-          start_val = readings[n][y];
-          xcnt ++;
-          flat = 0;
-        }
-      }else if(status == 1) {
-        if(readings[n][y] >= start_val && flat < 30) {
+
+      if(maxv[n] > 250){
+        if(readings[n][y] > 250) {
           local_sum += readings[n][y] * y;
           local_cnt += readings[n][y];
-          if(g < 20) flat++;
         }else {
-          last_sum = local_sum;
-          last_cnt = local_cnt;
-          local_sum = 0;
-          local_cnt = 0;
-          status = 0;
+          if(local_cnt != 0){
+            last_sum = local_sum;
+            last_cnt = local_cnt;
+            local_sum = 0;
+            local_cnt = 0;
+          }
+        }
+      }else {
+        int g = readings[n][y] - readings[n][y - 1];
+        if(status == 0){
+          if(g > 30){
+            status = 1;
+            start_val = readings[n][y];
+            xcnt ++;
+            flat = 0;
+          }
+        }else if(status == 1) {
+          if(readings[n][y] >= start_val && flat < 30) {
+            local_sum += readings[n][y] * y;
+            local_cnt += readings[n][y];
+            if(g < 20) flat++;
+          }else {
+            last_sum = local_sum;
+            last_cnt = local_cnt;
+            local_sum = 0;
+            local_cnt = 0;
+            status = 0;
+          }
         }
       }
     }
@@ -89,7 +101,6 @@ void findLaser(Mat I, int num_of_zones, double* laser){
 
     // Remove readings either not significant or have too many local max
     if((double)maxv[n] / mostv < 0.8 || xcnt > 5) laser[n] = -1;
-
   }
 }
 
