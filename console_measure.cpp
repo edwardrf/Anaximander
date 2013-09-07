@@ -7,8 +7,14 @@
 #include "laser.h"
 #include "capture.h"
 #include "server.h"
+#include "base64.h"
+#include "sha1.h"
 
 #define BUFFER_SIZE 1024
+#define WEB_SOCKET_MAGIC_STRING "258EAFA5-E914-47DA-95CA-C5AB0DC85B11"
+
+#define WEB_SOCKET_ACCEPT "Sec-WebSocket-Accept"
+#define WEB_SOCKET_KEY "Sec-WebSocket-Key"
 
 using namespace cv;
 using namespace std;
@@ -83,30 +89,100 @@ int main( int argc, char** argv )
   finishCapture();
 }
 
+string prepareJSON(){
+  ostringstream buf;
+  buf << "[";
+  int c = 0;
+  for(int n = 0; n < num_of_zones; n++){
+    if(laser[n] < 0) continue;
+    if(c > 0) buf << ",\n";
+    Point p = laserToRange(n, laser[n], num_of_zones, total_height);
+    buf << "[" << p.x << ", " << p.y << "]";
+    c++;
+  }
+  buf << "]";
+  return buf.str();
+}
+
 /**
  * Process the request as a HTTP request
  */
 void processHTTP(int sock, string request){
   ostringstream response;
-  response << "HTTP/1.1 200 OK\r\nContent-Type: text/html; charset=UTF-8\r\nAccess-Control-Allow-Origin: http://localhost\r\n\r\n";
-  if(request.find("X-Requested-With") != string::npos){
-    // AJAX request
+  size_t webSocketIndex = request.find(WEB_SOCKET_KEY);
+  if(webSocketIndex != string::npos){
+    // Socket IO request
+    // Get the value of Sec-WebSocket-Accept
+    size_t start = webSocketIndex + strlen(WEB_SOCKET_KEY);
+    while(request.at(start) == ' ' || request.at(start) == ':') start++;
+    size_t end = request.find("\r\n", start);
+    if(end == string::npos) return;
+    string value = request.substr(start, end-start);
+
+    // Calculate the hash
+    string str = value + WEB_SOCKET_MAGIC_STRING;
+    unsigned char shabin[20];
+
+    sha1::calc(str.c_str(), str.length(), shabin);
+    int hashlen = 0;
+
+    char* shabase64 = base64(shabin, 20, &hashlen);
+
+    cout<<shabase64;
+
+    // Response
+    response << "HTTP/1.1 101 Switching Protocols\r\n"
+        << "Connection: Upgrade\r\n"
+        << "Upgrade: websocket\r\n"
+        << "Sec-WebSocket-Accept: " << shabase64 << "\r\n\r\n";
+
+    string rstr = response.str();
+
+    // Content
+    write(sock, rstr.c_str(), rstr.length());
+
+    // Start transfering
+    unique_lock<mutex> lock(mut);
+    while(true){
+      while(!newDataReady){
+        newDataCond.wait(lock);
+      }
+      newDataReady = false;
+
+      string json = prepareJSON() + "\r\n\r\n";
+      int len = json.length();
+
+      // Message header, text message
+      unsigned char b = 129;
+      write(sock, &b, 1);
+
+      if(len < 126){
+        b = len;
+        write(sock, &b, 1);   
+      }else {
+        // 2 byte length, no mask
+        b = 126;
+        write(sock, &b, 1); 
+        b = (len >> 8) & 0xFF;
+        write(sock, &b, 1);
+        b = len & 0xFF;
+        write(sock, &b, 1);
+      }
+
+      int r = write(sock, json.c_str(), json.length());
+      if(r == -1) {
+        cout << "Write to client failed" << endl << flush;
+        return;
+      }
+    }
+
   }else {
     // Normal http
+    response << "HTTP/1.1 200 OK\r\nContent-Type: text/html; charset=UTF-8\r\nAccess-Control-Allow-Origin: http://localhost\r\n\r\n";
+    response << prepareJSON();
+    string rstr = response.str();
+    write(sock, rstr.c_str(), rstr.length());
   }
-
-  response << "[";
-  int c = 0;
-  for(int n = 0; n < num_of_zones; n++){
-    if(laser[n] < 0) continue;
-    if(c > 0) response << ",\n";
-    Point p = laserToRange(n, laser[n], num_of_zones, total_height);
-    response << "[" << p.x << ", " << p.y << "]";
-    c++;
-  }
-  response << "]";
-  string rstr = response.str();
-  write(sock, rstr.c_str(), rstr.length());
 }
 
 void processRange(int sock, string request){
