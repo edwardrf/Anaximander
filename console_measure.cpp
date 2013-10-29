@@ -23,7 +23,8 @@ using namespace boost;
 /// Global variables
 
 int threshold_value = 217;
-int threshold_type = 3;;
+int threshold_type = 3;
+int const video_device = 0;
 int const max_value = 255;
 int const max_type = 4;
 int const max_BINARY_value = 255;
@@ -54,14 +55,23 @@ void processHTTP(int sock, string request);
  */
 int main( int argc, char** argv )
 {
-  initCapture();
   Mat src(480, 640, CV_8UC3), undistorted;
+  VideoCapture cap(video_device);
+  if(!cap.isOpened()){
+    cout << "Failed to open video device " << video_device << ". Please check the camera is properly attached" << endl;
+    return -1;
+  }
+
   thread* server = startServer(3090, processRequest);
   int frameCounter = 0;
   time_t start = time(NULL);
+
   for(;;){
-    captureOneFrame(src.ptr(), CAPTURE_TYPE_BGR); // get a new frame from camera
     frameCounter++;
+
+    cap >> undistorted;
+    if(undistorted.empty()) continue;
+
     undistort(src, undistorted, cameraMatrix, distCoeffs);
 
     //imwrite("output.png", undistorted);
@@ -86,7 +96,6 @@ int main( int argc, char** argv )
   }
   cout << "Done." << endl << flush;
   server->join();
-  finishCapture();
 }
 
 string prepareJSON(){
