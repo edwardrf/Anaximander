@@ -2,12 +2,17 @@
 #include <boost/thread.hpp>
 #include <string>
 #include "time.h"
+#include "opencv2/opencv.hpp"
+#include <opencv2/core/core.hpp>
 #include "opencv2/imgproc/imgproc.hpp"
 #include "opencv2/highgui/highgui.hpp"
 #include "laser.h"
 #include "server.h"
 #include "base64.h"
 #include "sha1.h"
+#include "boost/date_time/posix_time/posix_time.hpp"
+
+typedef boost::posix_time::ptime Time;
 
 #define BUFFER_SIZE 1024
 #define WEB_SOCKET_MAGIC_STRING "258EAFA5-E914-47DA-95CA-C5AB0DC85B11"
@@ -44,6 +49,7 @@ char buffer[BUFFER_SIZE];
 condition_variable newDataCond;
 mutex mut;
 bool newDataReady;
+long remapTime = 0;
 
 void processRange(int sock, string request);
 void processRequest(int sock);
@@ -65,13 +71,23 @@ int main( int argc, char** argv )
   int frameCounter = 0;
   time_t start = time(NULL);
 
+  while(src.empty()) cap >> src; // Get a first frame to generate the undistort map
+  Size size = src.size();
+  Mat map1, map2;
+  initUndistortRectifyMap(cameraMatrix, distCoeffs, Mat(),
+      getOptimalNewCameraMatrix(cameraMatrix, distCoeffs, size, 1, size, 0),
+      size, CV_16SC2, map1, map2);
+
   for(;;){
     frameCounter++;
 
     cap >> src;
     if(src.empty()) continue;
 
-    undistort(src, undistorted, cameraMatrix, distCoeffs);
+    Time us=boost::posix_time::microsec_clock::local_time();
+    remap(src, undistorted, map1, map2, INTER_LINEAR);
+    Time ue=boost::posix_time::microsec_clock::local_time();
+    remapTime += (ue - us).total_microseconds();
 
     //imwrite("output.png", undistorted);
     Mat crop(undistorted, Rect(0, top_start, total_width, total_height));
@@ -88,7 +104,7 @@ int main( int argc, char** argv )
     time_t now = time(NULL);
     if(now - start >= 1) {
       start = now;
-      cout << "\r" << frameCounter << "fps   " << flush;
+      cout << "\r" << frameCounter << "fps \tremap time: " << (remapTime / frameCounter) << "         " << flush;
       frameCounter = 0;
     }
   }
