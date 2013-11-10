@@ -49,6 +49,7 @@ void findLaser(Mat I, int num_of_zones, double* laser){
     int local_cnt = 0;
     int last_sum = 0;
     int last_cnt = 0;
+    int num_of_pts = 0;
     int xcnt = 0;
     int status = 0;
     int start_val = 0;
@@ -60,12 +61,26 @@ void findLaser(Mat I, int num_of_zones, double* laser){
         if(readings[n][y] > 250) {
           local_sum += readings[n][y] * y;
           local_cnt += readings[n][y];
+          num_of_pts ++;
         }else {
           if(local_cnt != 0){
+            // Compensate single point lines by averating the point before and after
+            if(num_of_pts == 1){
+              if(y - 1 >= 0) {
+                local_sum += readings[n][y - 1] * (y - 1);
+                local_cnt += readings[n][y - 1];
+              }
+              if(y + 1 < cnt[n]) {
+                local_sum += readings[n][y + 1] * (y + 1);
+                local_cnt += readings[n][y + 1];
+              }
+            }
+
             last_sum = local_sum;
             last_cnt = local_cnt;
             local_sum = 0;
             local_cnt = 0;
+            num_of_pts = 0;
           }
         }
       }else {
@@ -81,13 +96,27 @@ void findLaser(Mat I, int num_of_zones, double* laser){
           if(readings[n][y] >= start_val && flat < 30) {
             local_sum += readings[n][y] * y;
             local_cnt += readings[n][y];
+            num_of_pts ++;
             if(g < 20) flat++;
           }else {
+            if(num_of_pts == 1){
+              if(y - 1 >= 0) {
+                local_sum += readings[n][y - 1] * (y - 1);
+                local_cnt += readings[n][y - 1];
+              }
+              if(y + 1 < cnt[n]) {
+                local_sum += readings[n][y + 1] * (y + 1);
+                local_cnt += readings[n][y + 1];
+              }
+            }
+
             last_sum = local_sum;
             last_cnt = local_cnt;
+
             local_sum = 0;
             local_cnt = 0;
             status = 0;
+            num_of_pts = 0;
           }
         }
       }
