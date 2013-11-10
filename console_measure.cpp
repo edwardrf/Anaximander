@@ -106,6 +106,7 @@ int main( int argc, char** argv )
       start = now;
       cout << "\r" << frameCounter << "fps \tremap time: " << (remapTime / frameCounter) << "         " << flush;
       frameCounter = 0;
+      remapTime = 0;
     }
   }
   cout << "Done." << endl << flush;
